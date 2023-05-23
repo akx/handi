@@ -50,6 +50,7 @@ class HandiApp:
     def get_landmarker(self):
         return HandLandmarker.create_from_options(
             HandLandmarkerOptions(
+                num_hands=2,
                 base_options=BaseOptions(model_asset_path=HAND_LANDMARKER_TASK),
                 running_mode=RunningMode.LIVE_STREAM,
                 result_callback=self._process_result,
@@ -77,7 +78,9 @@ class HandiApp:
                 if cv2.waitKey(10) & 0xFF == ord("q"):
                     break
                 if self.last_hands:
-                    new_ctl_values = compute_ctl_values(self.last_hands[0])
+                    new_ctl_values = {}
+                    for hand in self.last_hands:
+                        new_ctl_values.update(compute_ctl_values(hand))
                     send_changed_values(
                         self.output_port, self.last_ctl_values, new_ctl_values
                     )

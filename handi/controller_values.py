@@ -4,8 +4,13 @@ from handi.hand_result import HandResult
 
 
 def compute_ctl_values(hand: HandResult):
-    pos_base_ctl = 18
-    ang_base_ctl = 32
+    # 10 position values, 5 angle values, 5 size values = 20 values per hand
+    base_ctl = 18
+    if hand.is_left:
+        base_ctl += 20
+    pos_base_ctl = base_ctl
+    ang_base_ctl = base_ctl + 10
+    size_base_ctl = base_ctl + 15
     ctl_values = {}
     for i, center in enumerate(hand.finger_centers):
         x, y = center
@@ -16,6 +21,9 @@ def compute_ctl_values(hand: HandResult):
     for i, angle in enumerate(hand.finger_angles):
         angle_value = max(0, min(127, round((angle + 90) / 120 * 127)))
         ctl_values[ang_base_ctl + i] = angle_value
+    for i, size in enumerate(hand.finger_sizes):
+        size_value = max(0, min(127, round(size / 100 * 127)))
+        ctl_values[size_base_ctl + i] = size_value
     return ctl_values
 
 
