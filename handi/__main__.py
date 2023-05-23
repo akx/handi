@@ -12,7 +12,12 @@ from mediapipe.tasks.python.vision import (
 )
 import cv2
 
-from handi.controller_values import compute_ctl_values, send_changed_values
+from handi.controller_values import (
+    compute_ctl_values,
+    send_changed_values,
+    CTL_NUM_RANGE,
+    BASE_CTL_NUM,
+)
 from handi.cv_utils import get_cam_frame
 from handi.mp_utils import draw_landmarks_on_image
 from handi.hand_result import get_hand_results_from_landmarker
@@ -27,6 +32,31 @@ def open_output():
     output = outputs[0]
     print(f"Using output {output}")
     return mido.open_output(output)
+
+
+def draw_ctls(frame, values):
+    for ctl in CTL_NUM_RANGE:
+        value = values.get(ctl, 0)
+        x0 = 10 + (ctl - BASE_CTL_NUM) * 20
+        y0 = frame.shape[0] - 20
+        w = 15
+        h = -value
+        cv2.rectangle(
+            frame,
+            (x0, y0),
+            (x0 + w, y0 + h),
+            (0, 255, 0),
+            thickness=1,
+        )
+        cv2.putText(
+            frame,
+            str(ctl),
+            (x0, y0 + 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.34,
+            (0, 255, 0),
+            1,
+        )
 
 
 class HandiApp:
@@ -74,9 +104,6 @@ class HandiApp:
                         mp_image.numpy_view(),
                         self.last_landmarker_result,
                     )
-                cv2.imshow("Frame", frame)
-                if cv2.waitKey(10) & 0xFF == ord("q"):
-                    break
                 if self.last_hands:
                     new_ctl_values = {}
                     for hand in self.last_hands:
@@ -85,6 +112,12 @@ class HandiApp:
                         self.output_port, self.last_ctl_values, new_ctl_values
                     )
                     self.last_ctl_values = new_ctl_values
+                if self.last_ctl_values:
+                    draw_ctls(frame, self.last_ctl_values)
+
+                cv2.imshow("Frame", frame)
+                if cv2.waitKey(10) & 0xFF == ord("q"):
+                    break
 
 
 def main():
