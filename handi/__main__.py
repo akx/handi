@@ -20,7 +20,7 @@ from handi.controller_values import (
 )
 from handi.cv_utils import get_cam_frame
 from handi.mp_utils import draw_landmarks_on_image
-from handi.hand_result import get_hand_results_from_landmarker
+from handi.hand_result import get_hand_results_from_landmarker, HandResult, FINGER_NAMES
 
 # https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task
 HAND_LANDMARKER_TASK = os.path.join(os.path.dirname(__file__), "hand_landmarker.task")
@@ -57,6 +57,52 @@ def draw_ctls(frame, values):
             (0, 255, 0),
             1,
         )
+
+
+def draw_hand_data(frame, hand: HandResult):
+    x_off = 20 + (0 if hand.is_left else 400)
+    y_off = 20
+
+    def _write_text(row, col, text):
+        cv2.putText(
+            frame,
+            text,
+            (x_off + col * 80, y_off + row * 18),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.45,
+            (0, 255, 0),
+            1,
+        )
+
+    for ti, text in enumerate(
+        (
+            f"{hand.handedness} ",
+            f"{hand.center[0]:.2f}",
+            f"{hand.center[1]:.2f}",
+            f"---",
+            f"{hand.size:.1f}su",
+        )
+    ):
+        _write_text(0, ti, text)
+    for fi, (finger, center, angle, size) in enumerate(
+        zip(
+            FINGER_NAMES,
+            hand.finger_centers,
+            hand.finger_angles,
+            hand.finger_sizes,
+        ),
+        1,
+    ):
+        for ti, text in enumerate(
+            (
+                f"{hand.handedness} {finger} ",
+                f"{center[0]:.2f}",
+                f"{center[1]:.2f}",
+                f"{angle:.1f}deg",
+                f"{size:.1f}su",
+            )
+        ):
+            _write_text(fi, ti, text)
 
 
 class HandiApp:
@@ -112,6 +158,8 @@ class HandiApp:
                         self.output_port, self.last_ctl_values, new_ctl_values
                     )
                     self.last_ctl_values = new_ctl_values
+                    for hand in self.last_hands:
+                        draw_hand_data(frame, hand)
                 if self.last_ctl_values:
                     draw_ctls(frame, self.last_ctl_values)
 

@@ -14,6 +14,14 @@ FINGERS = [
     hc.HAND_PINKY_FINGER_CONNECTIONS,
 ]
 
+FINGER_NAMES = [
+    "thumb",
+    "index",
+    "middle",
+    "ring",
+    "pinky",
+]
+
 
 @dataclasses.dataclass
 class HandResult:
@@ -27,6 +35,10 @@ class HandResult:
     @property
     def is_left(self):
         return self.handedness == "left"
+
+    @property
+    def size(self) -> float:
+        return math.sqrt(self.size_sq)
 
 
 def get_hand_results_from_landmarker(

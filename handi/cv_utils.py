@@ -2,7 +2,7 @@ import cv2
 
 
 def get_cam_frame(cam):
-    h = 480
+    h = 600
     ok, frame = cam.read()
     if not ok:
         raise RuntimeError("Could not read from camera")
